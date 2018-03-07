@@ -1,0 +1,172 @@
+
+;;;;;;;;;;;;;;; org-mode publish ;;;;;;;;;;;;;;;;;;;;;
+(add-to-list 'load-path "~/work/book.jingyun.cn/misc/org/git/org-mode/lisp/")
+(add-to-list 'load-path "~/work/book.jingyun.cn/misc/org/git/org-mode/contrib/lisp/")
+
+
+;; (c-after-font-lock-init)
+
+
+(show-paren-mode 1)
+(menu-bar-mode 0)
+(set-face-foreground 'font-lock-keyword-face "DeepSkyBlue1")
+(set-face-foreground 'font-lock-string-face "Goldenrod")
+
+(setq make-backup-files nil
+      vc-handled-backends nil)
+
+(setq org-export-default-language "en"
+      org-export-html-extension "html"
+      org-export-with-timestamps nil
+      org-export-with-section-numbers nil
+      org-export-with-tags 'not-in-toc
+      org-export-skip-text-before-1st-heading nil
+      org-export-with-sub-superscripts '{}
+      org-export-with-LaTeX-fragments t
+      org-export-with-archived-trees nil
+      org-export-highlight-first-table-line t
+      org-export-latex-listings-w-names nil
+      org-html-head-include-default-style nil
+      org-html-head ""
+      org-export-htmlize-output-type 'css
+      org-startup-folded nil
+      org-export-allow-BIND t
+      org-publish-list-skipped-files t
+      org-publish-use-timestamps-flag t
+      org-export-babel-evaluate nil
+      org-confirm-babel-evaluate nil
+      org-export-with-broken-links t)
+
+(eval-after-load "org-html"
+  '(setq org-html-scripts
+         (concat org-html-scripts "\n"
+                 "<script type=\"text/javascript\">
+    function rpl(expr,a,b) {
+      var i=0
+      while (i!=-1) {
+         i=expr.indexOf(a,i);
+         if (i>=0) {
+            expr=expr.substring(0,i)+b+expr.substring(i+a.length);
+            i+=b.length;
+         }
+      }
+      return expr
+    }
+
+    function show_org_source(){
+       document.location.href = rpl(document.location.href,\"html\",\"org.html\");
+    }
+</script>
+")))
+
+;; re-export everything regardless of whether or not it's been modified
+;; (setq org-publish-use-timestamps-flag nil)
+
+;; (setq worg-base "~/git/worg/")
+;; (setq worg-htmlroot "~/git/worg-html/")
+;; (setq worg-base-directory worg-base)
+;; (setq worg-base-style-directory (concat worg-base "style/"))
+;; (setq worg-base-code-directory (concat worg-base "code/"))
+;; (setq worg-base-color-themes-directory (concat worg-base "color-themes/"))
+;; (setq worg-base-images-directory (concat worg-base "images/"))
+;; (setq worg-publish-directory worg-htmlroot)
+;; (setq worg-publish-style-directory (concat worg-htmlroot "style/"))
+
+
+(setq jingyun-base "~/work/book.jingyun.cn")
+(setq jingyun-htmlroot (concat jingyun-base "/build/"))
+(setq jingyun-base-directory (concat jingyun-base "/src"))
+(setq jingyun-publish-directory jingyun-htmlroot)
+(setq jingyun-base-style-directory (concat jingyun-base "/misc/web/style"))
+(setq jingyun-base-code-directory (concat jingyun-base "/misc/web/code"))
+(setq jingyun-base-color-themes-directory (concat jingyun-base "/misc/web/color-themes"))
+(setq jingyun-base-images-directory (concat jingyun-base "/misc/web/images"))
+(setq jingyun-publish-style-directory (concat jingyun-htmlroot "/misc/web/style"))
+
+(defun set-org-publish-project-alist ()
+  "Set publishing projects."
+  (interactive)
+  (setq org-publish-project-alist
+        `(("jingyun" :components ("jingyun-pages" "jingyun-color-themes" "jingyun-images" "jingyun-sources" "jingyun-extra" "jingyun-bibtex"))
+          ("jingyun-pages"
+           :base-directory ,jingyun-base-directory
+           :base-extension "org"
+           :exclude "FIXME"
+           :makeindex t
+           :auto-sitemap nil
+           :sitemap-ignore-case t
+           :html-extension "html"
+           :publishing-directory ,jingyun-publish-directory
+           :publishing-function (org-html-publish-to-html org-org-publish-to-org)
+           :htmlized-source t
+           :section-numbers nil
+           :table-of-contents nil
+           :html-head "<link rel=\"stylesheet\" title=\"Standard\" href=\"/style/jingyun.css\" type=\"text/css\" />
+<link rel=\"alternate stylesheet\" title=\"Zenburn\" href=\"style/jingyun-zenburn.css\" type=\"text/css\" />
+<link rel=\"alternate stylesheet\" title=\"Classic\" href=\"style/jingyun-classic.css\" type=\"text/css\" />
+<link rel=\"SHORTCUT ICON\" href=\"/org-mode-unicorn.ico\" type=\"image/x-icon\" />
+<link rel=\"icon\" href=\"/org-mode-unicorn.ico\" type=\"image/ico\" />"
+           :recursive t
+           :html-preamble ,(with-temp-buffer (insert-file-contents (concat jingyun-base "/misc/web/preamble.html")) (buffer-string))
+           :html-postamble "")
+          ("jingyun-sources"
+           :base-directory ,jingyun-base-directory
+           :base-extension "org"
+           :publishing-directory "/var/www/orgmode.org/jingyun/sources/"
+           :recursive t
+           :publishing-function org-publish-attachment)
+          ("jingyun-images"
+           :base-directory ,jingyun-base-directory
+           :base-extension "png\\|jpg\\|gif\\|pdf\\|csv\\|css\\|tex"
+           :publishing-directory ,jingyun-publish-directory
+           :recursive t
+           :publishing-function org-publish-attachment)
+          ("jingyun-extra"
+           :base-directory ,jingyun-base-style-directory
+           :base-extension "css"
+           :publishing-directory ,jingyun-publish-style-directory
+           :publishing-function org-publish-attachment)
+          ("jingyun-bibtex"
+           :base-directory (concat jingyun-base "/org-contrib/bibtex/")
+           :base-extension "bib"
+           :publishing-directory "/var/www/orgmode.org/jingyun/org-contrib/bibtex/"
+           :recursive nil
+           :publishing-function org-publish-attachment))))
+	  
+
+(set-org-publish-project-alist)
+
+(defun jingyun-fix-symbol-table ()
+  (when (string-match "org-symbols\\.html" buffer-file-name)
+    (goto-char (point-min))
+    (while (re-search-forward "<td>&amp;\\([^<;]+;\\)" nil t)
+      (replace-match (concat "<td>&" (match-string 1)) t t))))
+
+(defun publish-jingyun nil
+  "Publish Jingyun."
+  (interactive)
+  (add-hook 'org-publish-after-export-hook 'jingyun-fix-symbol-table)
+  (let ((org-format-latex-signal-error nil)
+        (jingyun-base-directory (concat jingyun-base "/src/"))
+        (jingyun-base-code-directory (concat jingyun-base "/misc/web/code/"))
+        (jingyun-base-color-themes-directory (concat jingyun-base "/misc/web/color-themes/"))
+        (jingyun-base-images-directory (concat jingyun-base "/misc/web/images/"))
+        (jingyun-publish-directory jingyun-htmlroot))
+    (set-org-publish-project-alist)
+    (message "Emacs %s" emacs-version)
+    (org-version)
+    (org-publish-project "jingyun")
+    (shell-command "update-web")))
+
+;; (defun parse-org-quotes ()
+;;   "Create ~/orgmode.org/org-quotes.js from org-quotes.org."
+;;   (interactive)
+;;   (load (concat worg-base "code/elisp/worg-fortune.el"))
+;;   (worg-write-fortune-file
+;;    (concat worg-base "org-quotes.org")
+;;    "~/orgmode.org/org-quotes.js"
+;;    120
+;;    "r_text[%d] = \"%s\";" "\n"
+;;    'worg-fortune-insert-javascript-pre
+;;    'worg-fortune-insert-javascript-post))
+

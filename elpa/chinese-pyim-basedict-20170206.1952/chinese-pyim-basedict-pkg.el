@@ -1,0 +1,1 @@
+(define-package "chinese-pyim-basedict" "20170206.1952" "The default pinyin dict of chinesepyim"  'nil  :url "https://github.com/tumashu/chinese-pyim-basedict" :keywords '("convenience" "Chinese" "pinyin" "input-method" "complete" ))
